@@ -5,7 +5,7 @@
   </div>
   <div class="nav-center-page">
     <nav>
-      <ul class="nav-links" id="nav-Links">
+      <ul id="main-nav" class="main-nav">
         <li><a href="/">Accueil</a></li>
         <li><a href="/trouver">Trouver des services</a></li>
         <li><a href="/proposer">Proposer des services</a></li>
@@ -30,6 +30,11 @@
       <% } %>
     </div>
   </div>
+  <button class="burger" id="burger-menu" aria-label="Ouvrir le menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
 </div>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -50,3 +55,4 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 </script>
+<script src="/burger.js"></script>

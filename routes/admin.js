@@ -28,10 +28,6 @@ router.get('/statistiques', ensureAuthenticated, ensureAdmin, adminController.ge
 // Route pour gérer les paramètres de l'application
 router.get('/parametres', ensureAuthenticated, ensureAdmin, adminController.getSettings
 );
-// Route pour accéder à la page d'administration (alternative)
-// router.get("/admin", requireAdmin, async (req, res) => {
-//   const users = await User.find().select('username email isAdmin');
-//   res.render("admin", { users });
-// });
+
 
 module.exports = router;

@@ -28,11 +28,12 @@
       <!-- Profils injectés ici -->
       <% propositions.forEach(function(prop) { %>
         <div class="service-card">
-          <h3><%= prop.titre %></h3>
+          <h3><b>Proposé par :</b> <%= prop.nom %> </h3>
+          <p><b>service offert : </b><%= prop.titre %></p>
           <p><b>Catégorie :</b> <%= prop.categorie %></p>
           <p><b>Description :</b> <%= prop.description %></p>
           <p><b>Contact :</b> <%= prop.contact %></p>
-          <p><b>Proposé par :</b> <%= prop.nom %> (<%= prop.email %>)</p>
+          <p><b></b><%= prop.email %></p>
         </div>
       <% }) %>
     </section>

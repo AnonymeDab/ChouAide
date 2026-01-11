@@ -1,0 +1,14 @@
+[0;1;32m●[0m mongodb.service - An object/document-oriented database
+     Loaded: loaded (]8;;file://AnonymeDab/usr/lib/systemd/system/mongodb.service\/usr/lib/systemd/system/mongodb.service]8;;\; [0;1;38:5:185mdisabled[0m; preset: [0;1;38:5:185mdisabled[0m)
+     Active: [0;1;32mactive (running)[0m since Fri 2025-11-28 08:28:16 CET; 6s ago
+ Invocation: 48a5c1d299f24a12ad6760686dbcc141
+       Docs: ]8;;man:mongod(1)\man:mongod(1)]8;;\
+   Main PID: 342431 (mongod)
+      Tasks: 33[0;38;5;245m (limit: 16378)[0m
+     Memory: 170.5M (peak: 264M)
+        CPU: 983ms
+     CGroup: /system.slice/mongodb.service
+             └─[0;38;5;245m342431 /usr/bin/mongod --unixSocketPrefix=/run/mongodb --config /etc/mongodb.conf[0m
+
+nov. 28 08:28:16 AnonymeDab systemd[1]: Started mongodb.service - An object/document-oriented database.
+nov. 28 08:28:16 AnonymeDab (mongod)[342431]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mmongodb.service: Referenced but unset environment variable evaluates to an empty string: DAEMON_OPTS[0m
