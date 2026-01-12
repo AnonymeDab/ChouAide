@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const { ensureAuthenticated, ensureAdmin } = require('../middlewares/authMiddleware');
+const { ensureAuthenticated, ensureAdmin } = require('../midd/auth');
 
 // Route pour accéder à la page d'administration
 router.get('/', ensureAuthenticated, ensureAdmin, adminController.getAdminDashboard);  
