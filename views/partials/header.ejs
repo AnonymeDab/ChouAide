@@ -16,11 +16,11 @@
   <div class="icone" id="userIcon" style="position:relative;cursor:pointer;">
     <i class="fa-solid fa-circle-user"></i>
     <div id="userPopup" class="user-popup">
-      <% if (user) { %>
+      <% if (typeof user !== 'undefined' && user) { %>
         <div class="user-avatar">
-          <span><%= user.username.charAt(0).toUpperCase() %></span>
+          <span><%= (user.username && user.username.charAt) ? user.username.charAt(0).toUpperCase() : '' %></span>
         </div>
-        <div class="user-name"><%= user.username %></div>
+        <div class="user-name"><%= user.username || '' %></div>
         <% if (user.isAdmin) { %>
           <a href="/admin" class="admin-link">Administration</a>
         <% } %>

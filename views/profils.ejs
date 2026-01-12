@@ -110,6 +110,23 @@
       traduction: "💬 Traduction & relecture"
     };
 
+    // Convertit les propositions (serveur) en structure `profils` utilisée par le script client
+    const propositionsFromServer = <%- JSON.stringify(propositions || []) %>;
+    const profils = {};
+    propositionsFromServer.forEach(p => {
+      const cat = p.categorie || 'autres';
+      if (!profils[cat]) profils[cat] = [];
+      profils[cat].push({
+        nom: p.nom || (p.username || 'Anonyme'),
+        competence: p.titre || p.competence || '',
+        dispo: p.dispo || '',
+        niveau: p.niveau || '',
+        email: p.email || '',
+        tel: p.contact || '',
+        description: p.description || ''
+      });
+    });
+
     const params = new URLSearchParams(window.location.search);
     const categorie = params.get("categorie");
 
@@ -209,17 +226,19 @@
       }
     });
 
-    // Mode sombre toggle
+    // Mode sombre toggle (protection si le bouton est absent)
     const darkToggle = document.querySelector(".dark-mode-toggle");
-    darkToggle.addEventListener("click", () => {
-      document.body.classList.toggle("dark-mode");
-      // Stocker la préférence utilisateur
-      if (document.body.classList.contains("dark-mode")) {
-        localStorage.setItem("darkMode", "enabled");
-      } else {
-        localStorage.setItem("darkMode", "disabled");
-      }
-    });
+    if (darkToggle) {
+      darkToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+        // Stocker la préférence utilisateur
+        if (document.body.classList.contains("dark-mode")) {
+          localStorage.setItem("darkMode", "enabled");
+        } else {
+          localStorage.setItem("darkMode", "disabled");
+        }
+      });
+    }
 
     // Charger préférence mode sombre au chargement
     window.addEventListener("DOMContentLoaded", () => {

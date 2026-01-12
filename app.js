@@ -1,20 +1,55 @@
 // Importation des modules nécessaires
-const express = require("express"); // Framework web principal
-const session = require("express-session"); // Gestion des sessions utilisateur
-const dotenv = require("dotenv"); // Chargement des variables d'environnement
-const path = require("path"); // Gestion des chemins de fichiers
-const mongoose = require('mongoose'); // ODM pour MongoDB
-const User = require('./models/User'); // Modèle utilisateur
-const Proposition = require('./models/Proposition'); // Modèle proposition de service
-const bcrypt = require('bcrypt'); // Pour le hash des mots de passe
+const express = require("express");
+const session = require("express-session");
+const dotenv = require("dotenv");
+const path = require("path");
+const mongoose = require('mongoose');
+const User = require('./models/User');
+const Proposition = require('./models/Proposition');
+const bcrypt = require('bcrypt');
+
+// Sécurité et utilitaires
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const MongoStore = require('connect-mongo');
 
 dotenv.config(); // Charge les variables d'environnement depuis .env
 
-const app = express(); // Crée l'application Express
-const PORT = process.env.PORT || 3000; // Définit le port d'écoute
+// Vérifications critiques des variables d'environnement
+if (!process.env.SESSION_SECRET) {
+  console.error('Erreur: SESSION_SECRET non défini. Ajoutez-le dans .env');
+  process.exit(1);
+}
+
+const app = express();
+const PORT = process.env.PORT || 3000;
 
 // Middleware pour parser les données des formulaires
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// Sécurité HTTP headers (désactive CSP pour faciliter le développement
+// — en production, remplacer par une politique CSP stricte avec nonces)
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// Note: `xss-clean` removed because it mutates req.query (incompatible with Express 5 getters)
+
+// Simple sanitation: supprime les clés dangereuses ($, .) dans req.body et req.params
+app.use((req, res, next) => {
+  const sanitize = obj => {
+    if (!obj || typeof obj !== 'object') return;
+    Object.keys(obj).forEach(key => {
+      if (key.startsWith('$') || key.indexOf('.') !== -1) {
+        delete obj[key];
+      } else if (typeof obj[key] === 'object') {
+        sanitize(obj[key]);
+      }
+    });
+  };
+  sanitize(req.body);
+  sanitize(req.params);
+  next();
+});
 
 // Sert les fichiers statiques (CSS, images, JS) depuis le dossier public
 app.use(express.static(path.join(__dirname, "public")));
@@ -25,21 +60,47 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // Configuration de la session utilisateur
+// Store persistant des sessions (remplace MemoryStore)
+const sessionStore = MongoStore.create({
+  mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/chouaide',
+  collectionName: 'sessions'
+});
+
 app.use(session({
-  secret: process.env.SESSION_SECRET, // Clé secrète pour signer la session
-  resave: false, // Ne pas sauvegarder la session si rien n'a changé
-  saveUninitialized: true // Sauvegarder une session même si elle est vide
+  secret: process.env.SESSION_SECRET,
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60 * 24 // 1 jour
+  }
 }));
 
 // Middleware pour rendre l'utilisateur courant accessible dans toutes les vues
 app.use(async (req, res, next) => {
-  if (req.session.userId) {
-    const user = await User.findById(req.session.userId).select('username isAdmin');
-    res.locals.user = user; // Accessible dans toutes les vues EJS
+  if (req.session && req.session.userId) {
+    try {
+      const user = await User.findById(req.session.userId).select('username isAdmin');
+      res.locals.user = user;
+    } catch (err) {
+      res.locals.user = null;
+    }
   } else {
     res.locals.user = null;
   }
   next();
+});
+
+// Rate limiter pour endpoints sensibles (login / register)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limite à 10 requêtes par IP par fenêtre
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Trop de requêtes depuis cette IP, réessayez plus tard.'
 });
 
 // Route page d'accueil
@@ -129,7 +190,7 @@ app.get("/profil/:id", (req, res) => {
 // ======================
 
 // Inscription utilisateur (POST)
-app.post("/register", async (req, res) => {
+app.post("/register", authLimiter, async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
     return res.render("register", { errors: [{ msg: "Tous les champs sont requis" }] });
@@ -154,7 +215,7 @@ app.post("/register", async (req, res) => {
 });
 
 // Connexion utilisateur (POST)
-app.post("/login", async (req, res) => {
+app.post("/login", authLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.render("login", { errors: [{ msg: "Tous les champs sont requis" }] });
